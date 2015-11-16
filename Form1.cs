@@ -271,7 +271,8 @@ namespace SerialComms
 
             string command  = "c6"; // command to be sent
             // RtypeTTypeMRC,TIN,Date TIME, Rnumber,TaxRate1,TaxrRate2,TaxRate3,TaxRate4,Amount1,Amount2,Amount3,Amount4,Tax1,Tax2,Tax3,Tax4
-            string data = "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00,100600570";   
+            string data = "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00,100600570";
+            data = data.ToUpper(); // Make sure it's in caps
             data =this.getHexData(data);
             string sequence = "22"; // Sequence to send
             string commandLength;   // Length of the command
