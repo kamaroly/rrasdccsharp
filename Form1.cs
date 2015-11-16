@@ -269,13 +269,15 @@ namespace SerialComms
         private void buttonSendCommand_Click(object sender, EventArgs e)
         {
 
-            string command  = "E7"; // command to be sent
-            string data     = "";   // initial dadta to hex
-            string sequence = "20"; // Sequence to send
+            string command  = "c6"; // command to be sent
+            // RtypeTTypeMRC,TIN,Date TIME, Rnumber,TaxRate1,TaxrRate2,TaxRate3,TaxRate4,Amount1,Amount2,Amount3,Amount4,Tax1,Tax2,Tax3,Tax4
+            string data = "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00,100600570";   
+            data =this.getHexData(data);
+            string sequence = "22"; // Sequence to send
             string commandLength;   // Length of the command
             string commandBcc;      // CheckSum of the command
 
-            string request = sequence + " " + command + data + " 05";
+            string request = sequence + " " + command.ToUpper() + " "  +data + " 05";
 
             commandLength = this.getLength(data); // Get the length of the byte hex to be sent
 
@@ -285,7 +287,7 @@ namespace SerialComms
 
             // For example to look for serial number you have to pass "01 24 20 E5 05 30 31 32 3E 03" SDC Status "01 24 20 E7 05 30 31 33 30 03"
             request = "01"+" "+request+" "+commandBcc + " 03";
- 
+
             //this.openPort();
             //string response = this.communicateToSdc(richTextCommand.Text);
             //this.SetText(response);
@@ -316,7 +318,7 @@ namespace SerialComms
         /**
          * Method to generate command to be sent to SDC
          */
-        private string getCommand(string dataString,string command)
+        private string getHexData(string dataString)
         {
           // First you'll need to get it into a byte[], so do this:
           byte[] bytes = Encoding.Default.GetBytes(dataString);
@@ -325,7 +327,7 @@ namespace SerialComms
           string hexString = BitConverter.ToString(bytes);
            
           // now, that's going to return a string with dashes (-) in it so you can then simply use this:
-          return hexString.Replace("-", " ");
+          return hexString.Replace("-", " ").ToUpper();
         }
 
         /**
@@ -350,7 +352,7 @@ namespace SerialComms
             lengthArray = this.Decode(lengthArray);
             string hex = BitConverter.ToString(lengthArray);
 
-            return hex;
+            return hex.ToUpper();
         }
 
            /**
@@ -400,7 +402,7 @@ namespace SerialComms
             // Conver the checkSum to the it's corresponding hex value
             string checkSumBcc = string.Join(" ", checkSumString);
 
-            return checkSumBcc;
+            return checkSumBcc.ToUpper();
            
         }
 
