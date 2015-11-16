@@ -1,0 +1,8 @@
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\bin\Debug\SerialComms.exe.config
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\bin\Debug\SerialComms.exe
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\bin\Debug\SerialComms.pdb
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.MainWindows.resources
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.Properties.Resources.resources
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.csproj.GenerateResource.Cache
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.exe
+c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.pdb
