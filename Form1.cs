@@ -271,7 +271,7 @@ namespace SerialComms
 
             string command  = "c6"; // command to be sent
             // RtypeTTypeMRC,TIN,Date TIME, Rnumber,TaxRate1,TaxrRate2,TaxRate3,TaxRate4,Amount1,Amount2,Amount3,Amount4,Tax1,Tax2,Tax3,Tax4
-            string data = "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00,100600570";
+            string data = "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00";
             data = data.ToUpper(); // Make sure it's in caps
             data =this.getHexData(data);
             string sequence = "22"; // Sequence to send
@@ -345,6 +345,8 @@ namespace SerialComms
            
             if (!string.IsNullOrWhiteSpace(data))
             {
+                // Make sure that data is in capital letter 
+                data = data.ToUpper();
                 byte[] bytes = data.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
                 length += bytes.Length;
             }
@@ -371,6 +373,8 @@ namespace SerialComms
            */
         private string getBcc(string dataWithLengthAndCommand)
         {
+            // First make sure the string is in capital
+            //dataWithLengthAndCommand = dataWithLengthAndCommand.ToUpper();
             string[] dataArray = dataWithLengthAndCommand.Split(' ');
             int checkSum = 0; // This will hold the sum of values of the bytes
             foreach(string hexBit in dataArray)
