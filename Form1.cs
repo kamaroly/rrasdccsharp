@@ -19,7 +19,6 @@ namespace SerialComms
 
         internal delegate void SerialPinChangedEventHandlerDelegate(
                  object sender, SerialPinChangedEventArgs e);
-        private SerialPinChangedEventHandler SerialPinChangedEventHandler1;
         delegate void SetTextCallback(string text);
         string InputData = String.Empty;
       
@@ -31,15 +30,7 @@ namespace SerialComms
         private void Form1_Load(object sender, EventArgs e)
         {
             // initiate available ports
-            this.initializeAvailableComports();
-
-            // initiate available BaudRate
-            this.initializeBaudRate();
-
-            // initiate Handshaking
-            this.initiateHandShaking();
-            this.initiateStopBits();
-            this.initiateParity();
+            this.initializeAvailableComports();      
         }
 
         /**
@@ -49,9 +40,6 @@ namespace SerialComms
         {
             // Show available ports
             this.initializeAvailableComports();
-
-            // Show available BaudRate
-            this.initializeBaudRate();
         }
 
         /**
@@ -62,8 +50,6 @@ namespace SerialComms
             string[] availableComPorts = null; // Stores the available com ports on this computer
             int index = 1;
             string comPortName = null;
-
-            // Make sure that we clean the rich text box
 
             // Attempt to get available ports on this computer
             comboBoxListPorts.Items.Clear();
@@ -87,141 +73,6 @@ namespace SerialComms
         }
 
         /**
-         * The baud rate is the amount of possible events that can happen in a second. 
-         * It is displays usually as a number of bit per second, the possible number
-         * that can be used are 300, 600, 1200, 2400, 9600, 14400, 19200, 38400,
-         * 57600, and 115200 (these come from the UAR 8250 chip is used, if a 16650
-         * the additional rates of 230400, 460800 and 921600) .
-         */
-        public void initializeBaudRate()
-        {
-            comboBoxBaudRate.Items.Add(300);
-            comboBoxBaudRate.Items.Add(600);
-            comboBoxBaudRate.Items.Add(1200);
-            comboBoxBaudRate.Items.Add(2400);
-            comboBoxBaudRate.Items.Add(9600);
-            comboBoxBaudRate.Items.Add(14400);
-            comboBoxBaudRate.Items.Add(19200);
-            comboBoxBaudRate.Items.Add(38400);
-            comboBoxBaudRate.Items.Add(57600);
-            comboBoxBaudRate.Items.Add(115200);
-            comboBoxBaudRate.Items.ToString();
-            //get first item print in text
-            comboBoxBaudRate.Text = comboBoxBaudRate.Items[0].ToString();
-        }
-
-        /**
-         * The Handshaking property is used when a full set of connections
-         * are used (such as the grey 9 way D-types that litter my desk).
-         * 
-         * If the Handshake property is set to None the DTR and RTS pins 
-         * are then freed up for the common use of Power, the PC on 
-         * which this is being typed gives +10.99 volts on the DTR 
-         * pin & +10.99 volts again on the RTS pin if set to true. 
-         * If set to false it gives -9.95 volts on the DTR,
-         * -9.94 volts on the RTS. These values are between +3
-         * to +25 and -3 to -25 volts this give a dead zone 
-         * to allow for noise immunity.
-         */
-        public void initiateHandShaking()
-        {
-            comboBoxHandShaking.Items.Add("None");
-            comboBoxHandShaking.Items.Add("XOnXOff");
-            comboBoxHandShaking.Items.Add("RequestToSend");
-            comboBoxHandShaking.Items.Add("RequestToSendXOnXOff");
-            comboBoxHandShaking.Text = comboBoxHandShaking.Items[0].ToString();
-
-        }
-        //Stop Bits
-        public void initiateStopBits()
-        {
-            //Stop Bits
-            comboBoxBits.Items.Add("One");
-            comboBoxBits.Items.Add("OnePointFive");
-            comboBoxBits.Items.Add("Two");
-            //get the first item print in the text
-            comboBoxBits.Text = comboBoxBits.Items[0].ToString();
-        }
-        //Parity 
-        public void initiateParity()
-        {
-            //Parity 
-            comboBoxParity.Items.Add("None");
-            comboBoxParity.Items.Add("Even");
-            comboBoxParity.Items.Add("Mark");
-            comboBoxParity.Items.Add("Odd");
-            comboBoxParity.Items.Add("Space");
-
-            //get the first item print in the text
-
-            comboBoxParity.Text = comboBoxParity.Items[0].ToString();
-
-        }
-
-        internal void PinChanged(object sender, SerialPinChangedEventArgs e)
-        {
-            SerialPinChange SerialPinChange1 = 0;
-            bool signalState = false;
-            SerialPinChange1 = e.EventType;
-            lblCTSStatus.BackColor = Color.Green;
-            lblDSRStatus.BackColor = Color.Green;
-            lblRIStatus.BackColor = Color.Green;
-            lblBreakStatus.BackColor = Color.Green;
-
-            switch (SerialPinChange1)
-            {
-                case SerialPinChange.Break:
-                    lblBreakStatus.BackColor = Color.Red;
-                    //MessageBox.Show("Break is Set");
-                    break;
-                case SerialPinChange.CDChanged:
-                    signalState = serialPort.CtsHolding;
-                    //  MessageBox.Show("CD = " + signalState.ToString());
-                    break;
-                case SerialPinChange.CtsChanged:
-                    signalState = serialPort.CDHolding;
-                    lblCTSStatus.BackColor = Color.Red;
-                    //MessageBox.Show("CTS = " + signalState.ToString());
-                    break;
-                case SerialPinChange.DsrChanged:
-                    signalState = serialPort.DsrHolding;
-                    lblDSRStatus.BackColor = Color.Red;
-                    // MessageBox.Show("DSR = " + signalState.ToString());
-                    break;
-                case SerialPinChange.Ring:
-                    lblRIStatus.BackColor = Color.Red;
-                    //MessageBox.Show("Ring Detected");
-                    break;
-            }
-        }
-
-        private void buttonTest_Click(object sender, EventArgs e)
-        {
-            
-            if (labelPortState.Text == "Closed")
-            {
-                labelPortState.Text = "Open";
-                serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
-                serialPort.BaudRate = Convert.ToInt32(comboBoxBaudRate.Text);
-                serialPort.DataBits = Convert.ToInt16(comboBoxBits.Text);
-                serialPort.StopBits = (StopBits)Enum.Parse(typeof(StopBits), comboBoxBits.Text);
-                serialPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), comboBoxBits.Text);
-                serialPort.Parity = (Parity)Enum.Parse(typeof(Parity), comboBoxParity.Text);
-                serialPort.Open();
-            }
-            else if (labelPortState.Text == "Open")
-            {
-                labelPortState.Text = "Closed";
-                serialPort.Close();
-            }
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        /**
          * OPEN THE PORT
          */
         private void openPort()
@@ -229,10 +80,6 @@ namespace SerialComms
                 if (!serialPort.IsOpen)
                 {
                     serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
-                    serialPort.BaudRate = Convert.ToInt32(comboBoxBaudRate.Text);
-                    serialPort.StopBits = (StopBits)Enum.Parse(typeof(StopBits), comboBoxBits.Text);
-                    serialPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), comboBoxHandShaking.Text);
-                    serialPort.Parity = (Parity)Enum.Parse(typeof(Parity), comboBoxParity.Text);
                     serialPort.Open();
                 }
             
@@ -248,48 +95,98 @@ namespace SerialComms
             }
         }
 
-
-        private void SetText(string text)
-        {
-            richTextResponse.Text = text;
-        }
-
-
         /**
          * Method to get SDC ID
          */
-        public string getSdcId()
+        public Dictionary<string, string> getSdcId()
         {
             string request = this.getSdcRequest("", "E5","20");
-            string response = this.communicateToSdc(request);
-            return response;
+            return  this.communicateToSdc(request);
         }
 
-        public string getSdcStatus()
+        public Dictionary<string, string> getSdcStatus()
         {
             string request = this.getSdcRequest("", "E7", "21");
-            string response = this.communicateToSdc(request);
+            Dictionary<string, string> response = this.communicateToSdc(request);
+
+            if (response["status"].ToUpper().Contains("P"))
+            {
+                response.Remove("status");
+
+                string[] responseArray = response["response"].Split(',');
+                response.Add("status", "success");
+                response.Add("SDC serial number", responseArray[0]);
+                response.Add("Firmware version", responseArray[1]);
+                response.Add("Hardware revision", responseArray[2]);
+                response.Add("The number of current SDC daily report", responseArray[3]);
+                response.Add("Last remote audit date and time", responseArray[4]);
+                response.Add("Last local audit date and time", responseArray[5]);
+
+                response.Remove("response");
+
+            }
             return response;
         }
 
-        public string getSignature(string data)
+        /**
+        * Method to get SDC ID
+        */
+        public Dictionary<string, string> getCounters(string data)
+        {
+            string request = this.getSdcRequest(data, "C9", "20");
+
+            Dictionary<string, string> response = this.communicateToSdc(request);
+            if (response["status"].ToUpper().Contains("P"))
+            {
+                response.Remove("status");
+
+                string[] responseArray = response["response"].Split(',');
+                response.Add("status", "success");
+                response.Add("Receipt number", responseArray[0]);
+                response.Add("Receipt number per receipt type", responseArray[1]);
+                response.Add("Total receipt number", responseArray[2]);
+                response.Add("Receipt label", responseArray[3]);
+
+                response.Remove("response");
+            }
+            return response;
+        }
+
+        public Dictionary<string, string> getSignature(string data)
         {
             string request = this.getSdcRequest(data, "C8", "23");
-            string response = this.communicateToSdc(request);
+            Dictionary<string,string> response = this.communicateToSdc(request);
+            if (response["status"].ToUpper().Contains("P"))
+            {
+                response.Remove("status");
+
+                string[] responseArray = response["response"].Split(',');
+                response.Add("status", "success");
+                response.Add("Receipt number", responseArray[0]);
+                response.Add("SDC serial number", responseArray[1]);
+                response.Add("Receipt number per receipt type", responseArray[2]);
+                response.Add("Total receipt number", responseArray[3]);
+                response.Add("Date time", responseArray[4]);
+                response.Add("Receipt Signature", responseArray[5]);
+                response.Add("Internal Data", responseArray[5]);
+
+                response.Remove("response");
+            }
             return response;
         }
 
-        public string sendReceiptData(string data)
+        public Dictionary<string, string> sendReceiptData(string data)
         {
             string request = this.getSdcRequest(data, "C6", "23");
-            string response = this.communicateToSdc(request);
-            return response;
+            return  this.communicateToSdc(request);
         }
         /**
          * Method to send request to SDC
          */
-        public string communicateToSdc(string commandString)
+        public Dictionary<string, string> communicateToSdc(string commandString)
         {
+
+            Dictionary<string, string> cleanResponse = new Dictionary<string, string>();
             try
             {
 
@@ -334,11 +231,16 @@ namespace SerialComms
 
                 this.closePort();
 
-                return response;
+                cleanResponse.Add("status", status);
+                cleanResponse.Add("response", response);
+
+                return cleanResponse;
             }
             catch(Exception exception)
             {
-                return exception.Message;
+                cleanResponse.Add("status", "ERROR");
+                cleanResponse.Add("response", exception.Message);
+                return cleanResponse;
             }
         }
 
@@ -496,12 +398,22 @@ namespace SerialComms
 
         private void SDCIDcmd_Click(object sender, EventArgs e)
         {
-            richTextResponse.Text = this.getSdcId();
+            richTextResponse.Clear();
+            Dictionary<string,string> response  = this.getSdcId();
+            foreach (KeyValuePair<string, string> element in response)
+            {
+                richTextResponse.Text += element.Key + " : " + element.Value + "\r\n";
+            }
         }
 
         private void SDC_ID_Status_Click(object sender, EventArgs e)
         {
-            richTextResponse.Text = this.getSdcStatus();
+            richTextResponse.Clear();
+            Dictionary<string, string> response = this.getSdcStatus();
+            foreach (KeyValuePair<string, string> element in response)
+            {
+                richTextResponse.Text += element.Key + " : " + element.Value + "\r\n";
+            }
         }
 
         private void ReceiptDataToSDC_Click(object sender, EventArgs e)
@@ -509,12 +421,29 @@ namespace SerialComms
             string data = richTextCommand.Text;
             if (string.IsNullOrWhiteSpace(data))
             {
-                MessageBox.Show("Please provide receipt information, example :nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00");
+                richTextResponse.Text="Please provide receipt information, example :nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00";
             }
             else
             {
-                richTextResponse.Text = this.sendReceiptData(data);
+                richTextResponse.Clear();
+                Dictionary<string, string> response = this.sendReceiptData(data);
+                foreach (KeyValuePair<string, string> element in response)
+                {
+                    richTextResponse.Text += element.Key + " : " + element.Value + "\r\n";
+                }
             }
+        }
+
+        private void getCounterButton_Click(object sender, EventArgs e)
+        {
+                richTextResponse.Clear();
+                string data = richTextCommand.Text;
+                Dictionary<string, string> response = this.getCounters(data);
+                foreach (KeyValuePair<string, string> element in response)
+                {
+                    richTextResponse.Text += element.Key + " : " + element.Value + "\r\n";
+                }
+
         }
 
         private void requestSignature_Click(object sender, EventArgs e)
@@ -522,11 +451,16 @@ namespace SerialComms
             string data = richTextCommand.Text;
             if (string.IsNullOrWhiteSpace(data))
             {
-                MessageBox.Show("Please provide receipt information, example : 1");
+                richTextResponse.Text="Please provide receipt information, example : 1";
             }
             else
             {
-                richTextResponse.Text = this.getSignature(data);
+                richTextResponse.Clear();
+                Dictionary<string, string> response = this.getSignature(data);
+                foreach (KeyValuePair<string, string> element in response)
+                {
+                    richTextResponse.Text += element.Key +" : " + element.Value +"\r\n";
+                }
             }
         }
 
@@ -605,7 +539,6 @@ namespace SerialComms
 
             return "Unknow error :" + status;
         }
-
 
     }
 }
