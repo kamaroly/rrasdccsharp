@@ -43,6 +43,7 @@
             this.button2 = new System.Windows.Forms.Button();
             this.requestSignature = new System.Windows.Forms.Button();
             this.getCounterButton = new System.Windows.Forms.Button();
+            this.SendElectronicJournalcmd = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnShowPorts
@@ -165,18 +166,28 @@
             // 
             // getCounterButton
             // 
-            this.getCounterButton.Location = new System.Drawing.Point(144, 217);
+            this.getCounterButton.Location = new System.Drawing.Point(144, 258);
             this.getCounterButton.Name = "getCounterButton";
             this.getCounterButton.Size = new System.Drawing.Size(166, 41);
             this.getCounterButton.TabIndex = 0;
             this.getCounterButton.Text = "Get counter";
             this.getCounterButton.Click += new System.EventHandler(this.getCounterButton_Click);
             // 
+            // SendElectronicJournalcmd
+            // 
+            this.SendElectronicJournalcmd.Location = new System.Drawing.Point(144, 217);
+            this.SendElectronicJournalcmd.Name = "SendElectronicJournalcmd";
+            this.SendElectronicJournalcmd.Size = new System.Drawing.Size(166, 33);
+            this.SendElectronicJournalcmd.TabIndex = 18;
+            this.SendElectronicJournalcmd.Text = "Send Electronic journal";
+            this.SendElectronicJournalcmd.Click += new System.EventHandler(this.SendElectronicJournalcmd_Click);
+            // 
             // MainWindows
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(848, 356);
+            this.Controls.Add(this.SendElectronicJournalcmd);
             this.Controls.Add(this.getCounterButton);
             this.Controls.Add(this.requestSignature);
             this.Controls.Add(this.button2);
@@ -216,6 +227,7 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button requestSignature;
         private System.Windows.Forms.Button getCounterButton;
+        private System.Windows.Forms.Button SendElectronicJournalcmd;
     }
 }
 

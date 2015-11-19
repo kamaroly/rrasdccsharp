@@ -6,4 +6,3 @@ c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\Serial
 c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.csproj.GenerateResource.Cache
 c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.exe
 c:\users\lambert.kamaro\documents\visual studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.pdb
-C:\Users\lambert.kamaro\Documents\Visual Studio 2012\Projects\SerialComms\SerialComms\obj\Debug\SerialComms.csprojResolveAssemblyReference.cache

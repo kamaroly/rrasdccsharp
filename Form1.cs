@@ -30,7 +30,8 @@ namespace SerialComms
         private void Form1_Load(object sender, EventArgs e)
         {
             // initiate available ports
-            this.initializeAvailableComports();      
+            this.initializeAvailableComports();
+
         }
 
         /**
@@ -40,6 +41,7 @@ namespace SerialComms
         {
             // Show available ports
             this.initializeAvailableComports();
+
         }
 
         /**
@@ -51,9 +53,11 @@ namespace SerialComms
             int index = 1;
             string comPortName = null;
 
+            // Make sure that we clean the rich text box
+
             // Attempt to get available ports on this computer
             comboBoxListPorts.Items.Clear();
-            
+
             availableComPorts = SerialPort.GetPortNames();
             do
             {
@@ -72,17 +76,23 @@ namespace SerialComms
             comboBoxListPorts.Text = comPortName;
         }
 
+ 
         /**
-         * OPEN THE PORT
-         */
+        * OPEN THE PORT
+        */
         private void openPort()
         {
-                if (!serialPort.IsOpen)
-                {
-                    serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
-                    serialPort.Open();
-                }
-            
+            if (!serialPort.IsOpen)
+            {
+                serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
+                serialPort.DataBits = 8;
+                serialPort.StopBits = StopBits.One;
+                serialPort.Handshake = Handshake.None;
+                serialPort.Parity = Parity.None;
+                serialPort.RtsEnable = true;
+                serialPort.DtrEnable = true;
+                serialPort.Open();
+            }
         }
         /**
          * Close serial port
@@ -180,6 +190,57 @@ namespace SerialComms
             string request = this.getSdcRequest(data, "C6", "23");
             return  this.communicateToSdc(request);
         }
+
+        public Dictionary<string, string> sendElectronicJournal()
+        {
+            int counter = 0;
+            string line;
+            string request;
+            int sequenceInt = 32;
+            string sequence;
+            string lineType = "B";
+
+            Dictionary<string, string> response = new Dictionary<string, string>();
+            
+            // Current line type:
+            //'B' mark for begin of the receipt
+            //'N' mark for line into the body of receipt
+            //'E' mark for end of receipt 
+            // Read the file and display it line by line.
+            System.IO.StreamReader file =
+            new System.IO.StreamReader("e:\\test.txt");
+
+            sequence = sequenceInt.ToString("X");
+            request = this.getSdcRequest(lineType, "EE", sequence);
+            response = this.communicateToSdc(request);
+            sequenceInt += 1;
+
+            while ((line = file.ReadLine()) != null)
+            {                        
+                     if(sequenceInt > 127)
+                     {
+                         sequenceInt = 32;
+                     }
+
+                line=    "N" + line;
+
+                sequence = sequenceInt.ToString("X");
+                request =  this.getSdcRequest(line, "EE", sequence);
+                line = counter.ToString() + line;
+                response.Add(line, this.communicateToSdc(request)["response"].ToString());
+
+                counter++;
+                sequenceInt += 1;
+            }
+            lineType = "E";
+            sequence = sequenceInt.ToString("X");
+            request = this.getSdcRequest(lineType, "EE", sequence);
+            response = this.communicateToSdc(request);
+            sequenceInt += 1;
+
+            file.Close();
+            return response;
+        }
         /**
          * Method to send request to SDC
          */
@@ -262,7 +323,6 @@ namespace SerialComms
             data = data.ToUpper();        
             data = this.getHexData(data);
             command = command.ToUpper();
-
             request = sequence + " " + command.ToUpper() + " 05";
 
             // if the data is not empty then add it to the command
@@ -538,6 +598,16 @@ namespace SerialComms
             }
 
             return "Unknow error :" + status;
+        }
+
+        private void SendElectronicJournalcmd_Click(object sender, EventArgs e)
+        {
+            richTextResponse.Clear();
+            Dictionary<string, string> response = this.sendElectronicJournal();
+            foreach (KeyValuePair<string, string> element in response)
+            {
+                richTextResponse.Text += element.Key + " : " + element.Value + "\r\n";
+            }
         }
 
     }
