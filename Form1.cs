@@ -85,6 +85,7 @@ namespace SerialComms
             if (!serialPort.IsOpen)
             {
                 serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
+                serialPort.BaudRate = 300;
                 serialPort.DataBits = 8;
                 serialPort.StopBits = StopBits.One;
                 serialPort.Handshake = Handshake.None;
@@ -178,7 +179,7 @@ namespace SerialComms
                 response.Add("Total receipt number", responseArray[3]);
                 response.Add("Date time", responseArray[4]);
                 response.Add("Receipt Signature", responseArray[5]);
-                response.Add("Internal Data", responseArray[5]);
+                response.Add("Internal Data", responseArray[6]);
 
                 response.Remove("response");
             }
