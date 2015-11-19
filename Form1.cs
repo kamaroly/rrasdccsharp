@@ -269,54 +269,92 @@ namespace SerialComms
         private void buttonSendCommand_Click(object sender, EventArgs e)
         {
 
-            string command  = "c6"; // command to be sent
+
+            string command = "c6"; // command to be sent
             // RtypeTTypeMRC,TIN,Date TIME, Rnumber,TaxRate1,TaxrRate2,TaxRate3,TaxRate4,Amount1,Amount2,Amount3,Amount4,Tax1,Tax2,Tax3,Tax4
-            string data = "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00";
-            data = data.ToUpper(); // Make sure it's in caps
-            data =this.getHexData(data);
-            string sequence = "22"; // Sequence to send
-            string commandLength;   // Length of the command
-            string commandBcc;      // CheckSum of the command
-
-            string request = sequence + " " + command.ToUpper() + " "  +data + " 05";
-
-            commandLength = this.getLength(data); // Get the length of the byte hex to be sent
-
-            request = commandLength + " " + request; // Add length to the request
-
-            commandBcc = this.getBcc(request);  // Get checksum of this command
-
-            // For example to look for serial number you have to pass "01 24 20 E5 05 30 31 32 3E 03" SDC Status "01 24 20 E7 05 30 31 33 30 03"
-            request = "01"+" "+request+" "+commandBcc + " 03";
-
-            //this.openPort();
-            //string response = this.communicateToSdc(richTextCommand.Text);
-            //this.SetText(response);
-            //this.closePort();
+            // "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00";
+            string data = richTextCommand.Text;
+            string request = this.getSdcRequest(data, command);
+            this.openPort();
+            string response = this.communicateToSdc(request); //richTextCommand.Text
+            this.SetText(response);
+            this.closePort();
         }
 
-
-        private string communicateToSdc(string commandString)
+        public string getSdcId()
         {
-            
-        
+            string request = this.getSdcRequest("", "E5");
+
+            string response = this.communicateToSdc(request);
+
+            return response;
+        }
+        /**
+         * Method to send request to SDC
+         */
+        public string communicateToSdc(string commandString)
+        {
             // Writing bytes to serial port
             byte[] bytes = commandString.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
             serialPort.Write(bytes, 0, bytes.Length);
+
+            System.Threading.Thread.Sleep(10); // Wait 1 millsecond for the answer 
 
             // Read response from the serial ports
             int responsebytes = serialPort.BytesToRead;
             byte[] buffer = new byte[responsebytes];
             serialPort.Read(buffer, 0, responsebytes);
 
-            int dataRange = Array.IndexOf(buffer, (byte)4) - 4; // returns the position of end of data <01><LEN><SEQ><CMD><DATA><04><STATUS><05><BCC><03>  
-            byte[] cleanData = new ArraySegment<byte>(buffer, 4, dataRange).ToArray();
+            // returns the position of end of data <01><LEN><SEQ><CMD><DATA><04><STATUS><05><BCC><03> 
+            int dataRange = Array.IndexOf(buffer, (byte)4) - 4;
+            if (dataRange > 0)
+            {
+                byte[] cleanData = new ArraySegment<byte>(buffer, 4, dataRange).ToArray();
+                cleanData = this.Decode(cleanData);
+                return System.Text.Encoding.UTF8.GetString(cleanData, 0, dataRange);   
+            }
+            
             // From byte array to string
-            return System.Text.Encoding.UTF8.GetString(cleanData, 0, dataRange);
-        
+            return System.Text.Encoding.UTF8.GetString(buffer, 0, responsebytes);      
         }
 
+      
         /**
+         * Get SDC request method
+         * @Author Kamaro Lambert
+         * @param string data //  RtypeTTypeMRC,TIN,Date TIME, Rnumber,TaxRate1,TaxrRate2,TaxRate3,TaxRate4,Amount1,Amount2,Amount3,Amount4,Tax1,Tax2,Tax3,Tax4
+         *                    // Example : "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00"
+         * @param string command // Command to sdc example c6
+         */
+        private string getSdcRequest(string data="", string command="")
+        {
+            string sequence = "22"; // Sequence to send
+            string commandLength;   // Length of the command
+            string commandBcc;      // CheckSum of the command
+            string request;
+
+            // Make sure ALL are in  caps
+            data = data.ToUpper();        
+            data = this.getHexData(data);
+            command = command.ToUpper();
+
+            request =  sequence + " " + command.ToUpper() + " " + data + " 05";
+
+            // Get the length of the byte hex to be sent
+            commandLength = this.getLength(data);
+
+            // Add length to the request
+            request = commandLength + " " + request;
+            
+            // Get checksum(BCC) of this command
+            commandBcc = this.getBcc(request);  
+
+            // For example to look for serial number you have to pass "01 24 20 E5 05 30 31 32 3E 03" OR 
+            // SDC Status "01 24 20 E7 05 30 31 33 30 03"
+            return request = "01" + " " + request + " " + commandBcc + " 03";
+        }
+
+        /**ret
          * Method to generate command to be sent to SDC
          */
         private string getHexData(string dataString)
@@ -339,10 +377,11 @@ namespace SerialComms
          */
         private string getLength(string data)
         {     
-            //find the length by counting the data and adding length itsself ,sequence,command,Post amble 05 (TOTAL=4)
+            // Find the length by counting the data and adding length itsself, 
+            // sequence,command,Post amble 05 (TOTAL=4)
             //, and 20h which is 32 in decimal which is 36 in total
             int length = 36;
-           
+ 
             if (!string.IsNullOrWhiteSpace(data))
             {
                 // Make sure that data is in capital letter 
@@ -374,41 +413,44 @@ namespace SerialComms
         private string getBcc(string dataWithLengthAndCommand)
         {
             // First make sure the string is in capital
-            //dataWithLengthAndCommand = dataWithLengthAndCommand.ToUpper();
             string[] dataArray = dataWithLengthAndCommand.Split(' ');
-            int checkSum = 0; // This will hold the sum of values of the bytes
+            
+            // This will hold the sum of values of the bytes
+            int checkSum = 0; 
+      
+            // Summing (adding) the values of the bytes
             foreach(string hexBit in dataArray)
             {
                  int asciiValue = Convert.ToInt32(hexBit, 16);
                  checkSum += asciiValue;
             }
 
-            string checkHex = string.Format("{0:X2}", checkSum);
-            // Use ToCharArray to convert string to array.
-            char[] array = checkHex.ToCharArray();
-            int hexArraySize = (checkHex.Length - 4) * -1;
-            string[] checkSumString = new string[hexArraySize + checkHex.Length];
+            // Getting the ascii value of each digit in the response because as per
+            // the technical specification we need to get the ascii value before
+            // we convert it back to the HEX
+            byte[] asciiBytes = Encoding.ASCII.GetBytes(checkSum.ToString());
+            
+            // Since the BCC string needs to be 4 Digits, if the asciibytes
+            // Doesn't reach 4 digits, compliment it by add missing bytes
+            // we just need to add 30 because 30 is the ascii value of 0
 
-            // Fill empty bits with 30 as 30 is the minimum value
-            int index = hexArraySize;
-            hexArraySize = hexArraySize - 1;
-            while ( hexArraySize >= 0)
+            string checkSumString = "";
+            // Prefixing missing bcc byte to the response
+            if (asciiBytes.Length < 4)
             {
-                checkSumString[hexArraySize] = "30";
-                hexArraySize--;
+                for (int count = 0; count < 4 - asciiBytes.Length; count++)
+                {
+                    checkSumString += " 30";
+                }
             }
 
-            // Fill the rest of the array.
-            for (int i = 0; i < array.Length; i++)
+            // Let's calculate the Hex value for the BCC now
+            foreach(int bccValue in asciiBytes)
             {
-                // Get character from array.
-                checkSumString[index++] = "3" + array[i].ToString();
+                checkSumString +=" "+bccValue.ToString("X");
             }
-            // Conver the checkSum to the it's corresponding hex value
-            string checkSumBcc = string.Join(" ", checkSumString);
 
-            return checkSumBcc.ToUpper();
-           
+            return checkSumString.TrimStart().ToUpper();     
         }
 
         /**
