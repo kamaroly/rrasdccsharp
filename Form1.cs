@@ -226,8 +226,6 @@ namespace SerialComms
          */
         private void openPort()
         {
-            try
-            {
                 if (!serialPort.IsOpen)
                 {
                     serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
@@ -237,11 +235,7 @@ namespace SerialComms
                     serialPort.Parity = (Parity)Enum.Parse(typeof(Parity), comboBoxParity.Text);
                     serialPort.Open();
                 }
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show(exception.Message);
-            }
+            
         }
         /**
          * Close serial port
@@ -260,24 +254,6 @@ namespace SerialComms
             richTextResponse.Text = text;
         }
 
-
-        private void buttonSendCommand_Click(object sender, EventArgs e)
-        {
-            // command to be sent
-            string command = "c6"; 
-
-            // RtypeTTypeMRC,TIN,Date TIME, Rnumber,TaxRate1,TaxrRate2,TaxRate3,TaxRate4,Amount1,Amount2,Amount3,Amount4,Tax1,Tax2,Tax3,Tax4
-            // "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00";
-            string data = richTextCommand.Text;
-            string sequence = "22";
-            string request = this.getSdcRequest(data, command, sequence);
-
-            this.openPort();
-            string response = this.communicateToSdc(request); 
-            this.SetText(response);
-
-            this.closePort();
-        }
 
         /**
          * Method to get SDC ID
@@ -314,29 +290,56 @@ namespace SerialComms
          */
         public string communicateToSdc(string commandString)
         {
-            // Writing bytes to serial port
-            byte[] bytes = commandString.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
-            serialPort.Write(bytes, 0, bytes.Length);
-
-            // Wait 1 millsecond for the answer
-            System.Threading.Thread.Sleep(100);  
-
-            // Read response from the serial ports
-            int responsebytes = serialPort.BytesToRead;
-            byte[] buffer = new byte[responsebytes];
-            serialPort.Read(buffer, 0, responsebytes);
-
-            // returns the position of end of data <01><LEN><SEQ><CMD><DATA><04><STATUS><05><BCC><03> 
-            int dataRange = Array.IndexOf(buffer, (byte)4) - 4;
-            if (dataRange > 0)
+            try
             {
-                byte[] cleanData = new ArraySegment<byte>(buffer, 4, dataRange).ToArray();
-                cleanData = this.Decode(cleanData);
-                return System.Text.Encoding.UTF8.GetString(cleanData, 0, dataRange);   
+
+                this.openPort();
+                // Writing bytes to serial port
+                byte[] bytes = commandString.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
+                serialPort.Write(bytes, 0, bytes.Length);
+
+                // Wait 1 millsecond for the answer
+                System.Threading.Thread.Sleep(100);
+
+                // Read response from the serial ports
+                int responsebytes = serialPort.BytesToRead;
+                byte[] buffer = new byte[responsebytes];
+                serialPort.Read(buffer, 0, responsebytes);
+
+                // returns the position of end of data <01><LEN><SEQ><CMD><DATA><04><STATUS><05><BCC><03> 
+                
+                // Get position of 4
+                int beginOfStatus = Array.IndexOf(buffer, (byte)4);
+
+                // Get position of 5
+                int endOfStatus = Array.IndexOf(buffer, (byte)5) - beginOfStatus - 1;
+
+                byte[] statusBytes = new ArraySegment<byte>(buffer, beginOfStatus+1, endOfStatus).ToArray();
+
+                string status = System.Text.Encoding.UTF8.GetString(statusBytes, 0, statusBytes.Length);
+                string response;
+
+                if (status.ToUpper().Contains("P"))
+                {
+                    // Remove 4 the status part of the response, so that we can have it clean
+                    beginOfStatus -= 4;
+                    byte[] cleanData = new ArraySegment<byte>(buffer, 4, beginOfStatus).ToArray();
+                    cleanData = this.Decode(cleanData);
+                    response = System.Text.Encoding.UTF8.GetString(cleanData, 0, beginOfStatus);
+                }
+                else
+                {
+                    response = this.getErrorMessage(status);
+                }
+
+                this.closePort();
+
+                return response;
             }
-            
-            // From byte array to string
-            return System.Text.Encoding.UTF8.GetString(buffer, 0, responsebytes);      
+            catch(Exception exception)
+            {
+                return exception.Message;
+            }
         }
 
       
@@ -493,16 +496,12 @@ namespace SerialComms
 
         private void SDCIDcmd_Click(object sender, EventArgs e)
         {
-            this.openPort();
             richTextResponse.Text = this.getSdcId();
-            this.closePort();
         }
 
         private void SDC_ID_Status_Click(object sender, EventArgs e)
         {
-            this.openPort();
             richTextResponse.Text = this.getSdcStatus();
-            this.closePort();
         }
 
         private void ReceiptDataToSDC_Click(object sender, EventArgs e)
@@ -514,9 +513,7 @@ namespace SerialComms
             }
             else
             {
-                this.openPort();
                 richTextResponse.Text = this.sendReceiptData(data);
-                this.closePort();
             }
         }
 
@@ -529,12 +526,85 @@ namespace SerialComms
             }
             else
             {
-                this.openPort();
                 richTextResponse.Text = this.getSignature(data);
-                this.closePort();
             }
         }
 
+        public string getErrorMessage(string status)
+        {
+            if (status.StartsWith("E00"))
+            {
+                return "Error:00 no error";
+            }
+            if (status.StartsWith("E11"))
+            {
+                return "Error:11 internal memory full";
+            }
+            if (status.StartsWith("E12"))
+            {
+                return "Error:12 internal data corrupted";
+            }
+            if (status.StartsWith("E13"))
+            {
+                return "Error:13 internal memory error";
+            }
+            if (status.StartsWith("E20"))
+            {
+                return "Error:20 Real Time Clock error";
+            }
+            if (status.StartsWith("E30"))
+            {
+                return "Error:30 wrong command code";
+            }
+            if (status.StartsWith("E31"))
+            {
+                return "Error:31 wrong data format in the CIS request data";
+            }
+            if (status.StartsWith("E32"))
+            {
+                return "Error:32 wrong TIN in the CIS request data";
+            }
+            if (status.StartsWith("E33"))
+            {
+                return "Error:33 wrong tax rate in the CIS request data";
+            }
+            if (status.StartsWith("E34"))
+            {
+                return "Error:34 invalid receipt number int the CIS request data";
+            }
+            if (status.StartsWith("E40"))
+            {
+                return "Error:40 SDC not activated";
+            }
+            if (status.StartsWith("E41"))
+            {
+                return "Error:41 SDC already activated";
+            }
+            if (status.StartsWith("E90"))
+            {
+                return "Error:90 SIM card error";
+            }
+            if (status.StartsWith("E91"))
+            {
+                return "Error:91 GPRS modem error";
+            }
+            if (status.StartsWith("E99"))
+            {
+                return "Error:99 hardware intervention is necessary.";
+            }
+
+            if (status.StartsWith("W1"))
+            {
+                return "Error:1 SDC internal memory is near to full (it is at more than 90% of capacity).";
+            }
+            
+            if (status.StartsWith("W2"))
+            {
+                return "SDC internal memory is near to full (it is at more than 95% of capacity) .";
+            }
+
+            return "Unknow error :" + status;
+        }
 
 
     }
