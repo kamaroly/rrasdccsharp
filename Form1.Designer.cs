@@ -39,10 +39,14 @@
             this.comboBoxBits = new System.Windows.Forms.ComboBox();
             this.comboBoxParity = new System.Windows.Forms.ComboBox();
             this.labelPortState = new System.Windows.Forms.Label();
-            this.btnPortState = new System.Windows.Forms.Button();
             this.richTextCommand = new System.Windows.Forms.RichTextBox();
             this.richTextResponse = new System.Windows.Forms.RichTextBox();
-            this.buttonSendCommand = new System.Windows.Forms.Button();
+            this.SDC_ID_Status = new System.Windows.Forms.Button();
+            this.SDCIDcmd = new System.Windows.Forms.Button();
+            this.ReceiptDataToSDC = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.requestSignature = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnShowPorts
@@ -133,51 +137,90 @@
             this.labelPortState.TabIndex = 7;
             this.labelPortState.Text = "Closed";
             // 
-            // btnPortState
-            // 
-            this.btnPortState.Location = new System.Drawing.Point(43, 236);
-            this.btnPortState.Name = "btnPortState";
-            this.btnPortState.Size = new System.Drawing.Size(75, 23);
-            this.btnPortState.TabIndex = 8;
-            this.btnPortState.Text = "Show ports";
-            this.btnPortState.UseVisualStyleBackColor = true;
-            this.btnPortState.Click += new System.EventHandler(this.btnPortState_Click);
-            // 
             // richTextCommand
             // 
-            this.richTextCommand.Location = new System.Drawing.Point(347, 45);
+            this.richTextCommand.Location = new System.Drawing.Point(597, 58);
             this.richTextCommand.Name = "richTextCommand";
-            this.richTextCommand.Size = new System.Drawing.Size(216, 44);
+            this.richTextCommand.Size = new System.Drawing.Size(498, 49);
             this.richTextCommand.TabIndex = 9;
             this.richTextCommand.Text = "";
             // 
             // richTextResponse
             // 
-            this.richTextResponse.Location = new System.Drawing.Point(347, 137);
+            this.richTextResponse.Location = new System.Drawing.Point(597, 139);
             this.richTextResponse.Name = "richTextResponse";
-            this.richTextResponse.Size = new System.Drawing.Size(216, 82);
-            this.richTextResponse.TabIndex = 10;
+            this.richTextResponse.Size = new System.Drawing.Size(498, 96);
+            this.richTextResponse.TabIndex = 16;
             this.richTextResponse.Text = "";
             // 
-            // buttonSendCommand
+            // SDC_ID_Status
             // 
-            this.buttonSendCommand.Location = new System.Drawing.Point(347, 97);
-            this.buttonSendCommand.Name = "buttonSendCommand";
-            this.buttonSendCommand.Size = new System.Drawing.Size(216, 34);
-            this.buttonSendCommand.TabIndex = 11;
-            this.buttonSendCommand.Text = "SEND COMMAND";
-            this.buttonSendCommand.UseVisualStyleBackColor = true;
-            this.buttonSendCommand.Click += new System.EventHandler(this.buttonSendCommand_Click);
+            this.SDC_ID_Status.Location = new System.Drawing.Point(341, 71);
+            this.SDC_ID_Status.Name = "SDC_ID_Status";
+            this.SDC_ID_Status.Size = new System.Drawing.Size(177, 23);
+            this.SDC_ID_Status.TabIndex = 0;
+            this.SDC_ID_Status.Text = "Get SDC status";
+            this.SDC_ID_Status.Click += new System.EventHandler(this.SDC_ID_Status_Click);
+            // 
+            // SDCIDcmd
+            // 
+            this.SDCIDcmd.Location = new System.Drawing.Point(341, 42);
+            this.SDCIDcmd.Name = "SDCIDcmd";
+            this.SDCIDcmd.Size = new System.Drawing.Size(177, 23);
+            this.SDCIDcmd.TabIndex = 12;
+            this.SDCIDcmd.Text = "Get SDC ID";
+            this.SDCIDcmd.UseVisualStyleBackColor = true;
+            this.SDCIDcmd.Click += new System.EventHandler(this.SDCIDcmd_Click);
+            // 
+            // ReceiptDataToSDC
+            // 
+            this.ReceiptDataToSDC.Location = new System.Drawing.Point(341, 100);
+            this.ReceiptDataToSDC.Name = "ReceiptDataToSDC";
+            this.ReceiptDataToSDC.Size = new System.Drawing.Size(177, 33);
+            this.ReceiptDataToSDC.TabIndex = 13;
+            this.ReceiptDataToSDC.Text = "Send Receipt Data to SDC";
+            this.ReceiptDataToSDC.Click += new System.EventHandler(this.ReceiptDataToSDC_Click);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(597, 29);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 14;
+            this.button1.Text = "INPUT";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(597, 110);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 15;
+            this.button2.Text = "OUTPUT";
+            this.button2.UseVisualStyleBackColor = true;
+            // 
+            // requestSignature
+            // 
+            this.requestSignature.Location = new System.Drawing.Point(341, 151);
+            this.requestSignature.Name = "requestSignature";
+            this.requestSignature.Size = new System.Drawing.Size(177, 33);
+            this.requestSignature.TabIndex = 17;
+            this.requestSignature.Text = "Request SIGNATURE";
+            this.requestSignature.Click += new System.EventHandler(this.requestSignature_Click);
             // 
             // MainWindows
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(664, 313);
-            this.Controls.Add(this.buttonSendCommand);
+            this.ClientSize = new System.Drawing.Size(1125, 356);
+            this.Controls.Add(this.requestSignature);
+            this.Controls.Add(this.button2);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.ReceiptDataToSDC);
+            this.Controls.Add(this.SDCIDcmd);
+            this.Controls.Add(this.SDC_ID_Status);
             this.Controls.Add(this.richTextResponse);
             this.Controls.Add(this.richTextCommand);
-            this.Controls.Add(this.btnPortState);
             this.Controls.Add(this.labelPortState);
             this.Controls.Add(this.comboBoxParity);
             this.Controls.Add(this.comboBoxBits);
@@ -210,10 +253,14 @@
         private System.Windows.Forms.ComboBox comboBoxBits;
         private System.Windows.Forms.ComboBox comboBoxParity;
         private System.Windows.Forms.Label labelPortState;
-        private System.Windows.Forms.Button btnPortState;
         private System.Windows.Forms.RichTextBox richTextCommand;
         private System.Windows.Forms.RichTextBox richTextResponse;
-        private System.Windows.Forms.Button buttonSendCommand;
+        private System.Windows.Forms.Button SDC_ID_Status;
+        private System.Windows.Forms.Button SDCIDcmd;
+        private System.Windows.Forms.Button ReceiptDataToSDC;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button requestSignature;
     }
 }
 

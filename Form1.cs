@@ -221,32 +221,26 @@ namespace SerialComms
 
         }
 
-        private void btnPortState_Click(object sender, EventArgs e)
-        {
-            if (btnPortState.Text == "Closed")
-            {
-                btnPortState.Text = "Open";
-            }
-            else if (btnPortState.Text == "Open")
-            {
-                btnPortState.Text = "Closed";
-                serialPort.Close();
-            }
-        }
-
         /**
          * OPEN THE PORT
          */
         private void openPort()
         {
-            if (!serialPort.IsOpen)
+            try
             {
-                serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
-                serialPort.BaudRate = Convert.ToInt32(comboBoxBaudRate.Text);
-                serialPort.StopBits = (StopBits)Enum.Parse(typeof(StopBits), comboBoxBits.Text);
-                serialPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), comboBoxHandShaking.Text);
-                serialPort.Parity = (Parity)Enum.Parse(typeof(Parity), comboBoxParity.Text);
-                serialPort.Open();
+                if (!serialPort.IsOpen)
+                {
+                    serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
+                    serialPort.BaudRate = Convert.ToInt32(comboBoxBaudRate.Text);
+                    serialPort.StopBits = (StopBits)Enum.Parse(typeof(StopBits), comboBoxBits.Text);
+                    serialPort.Handshake = (Handshake)Enum.Parse(typeof(Handshake), comboBoxHandShaking.Text);
+                    serialPort.Parity = (Parity)Enum.Parse(typeof(Parity), comboBoxParity.Text);
+                    serialPort.Open();
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message);
             }
         }
         /**
@@ -266,27 +260,53 @@ namespace SerialComms
             richTextResponse.Text = text;
         }
 
+
         private void buttonSendCommand_Click(object sender, EventArgs e)
         {
+            // command to be sent
+            string command = "c6"; 
 
-
-            string command = "c6"; // command to be sent
             // RtypeTTypeMRC,TIN,Date TIME, Rnumber,TaxRate1,TaxrRate2,TaxRate3,TaxRate4,Amount1,Amount2,Amount3,Amount4,Tax1,Tax2,Tax3,Tax4
             // "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00";
             string data = richTextCommand.Text;
-            string request = this.getSdcRequest(data, command);
+            string sequence = "22";
+            string request = this.getSdcRequest(data, command, sequence);
+
             this.openPort();
-            string response = this.communicateToSdc(request); //richTextCommand.Text
+            string response = this.communicateToSdc(request); 
             this.SetText(response);
+
             this.closePort();
         }
 
+        /**
+         * Method to get SDC ID
+         */
         public string getSdcId()
         {
-            string request = this.getSdcRequest("", "E5");
-
+            string request = this.getSdcRequest("", "E5","20");
             string response = this.communicateToSdc(request);
+            return response;
+        }
 
+        public string getSdcStatus()
+        {
+            string request = this.getSdcRequest("", "E7", "21");
+            string response = this.communicateToSdc(request);
+            return response;
+        }
+
+        public string getSignature(string data)
+        {
+            string request = this.getSdcRequest(data, "C8", "23");
+            string response = this.communicateToSdc(request);
+            return response;
+        }
+
+        public string sendReceiptData(string data)
+        {
+            string request = this.getSdcRequest(data, "C6", "23");
+            string response = this.communicateToSdc(request);
             return response;
         }
         /**
@@ -298,7 +318,8 @@ namespace SerialComms
             byte[] bytes = commandString.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
             serialPort.Write(bytes, 0, bytes.Length);
 
-            System.Threading.Thread.Sleep(10); // Wait 1 millsecond for the answer 
+            // Wait 1 millsecond for the answer
+            System.Threading.Thread.Sleep(100);  
 
             // Read response from the serial ports
             int responsebytes = serialPort.BytesToRead;
@@ -326,9 +347,8 @@ namespace SerialComms
          *                    // Example : "nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00"
          * @param string command // Command to sdc example c6
          */
-        private string getSdcRequest(string data="", string command="")
+        private string getSdcRequest(string data, string command,string sequence)
         {
-            string sequence = "22"; // Sequence to send
             string commandLength;   // Length of the command
             string commandBcc;      // CheckSum of the command
             string request;
@@ -338,7 +358,14 @@ namespace SerialComms
             data = this.getHexData(data);
             command = command.ToUpper();
 
-            request =  sequence + " " + command.ToUpper() + " " + data + " 05";
+            request = sequence + " " + command.ToUpper() + " 05";
+
+            // if the data is not empty then add it to the command
+            if (string.IsNullOrWhiteSpace(data) == false)
+            {
+                request = sequence + " " + command.ToUpper() + " " + data + " 05";
+            }
+            
 
             // Get the length of the byte hex to be sent
             commandLength = this.getLength(data);
@@ -413,44 +440,40 @@ namespace SerialComms
         private string getBcc(string dataWithLengthAndCommand)
         {
             // First make sure the string is in capital
+            //dataWithLengthAndCommand = dataWithLengthAndCommand.ToUpper();
             string[] dataArray = dataWithLengthAndCommand.Split(' ');
-            
-            // This will hold the sum of values of the bytes
-            int checkSum = 0; 
-      
-            // Summing (adding) the values of the bytes
-            foreach(string hexBit in dataArray)
+            int checkSum = 0; // This will hold the sum of values of the bytes
+            foreach (string hexBit in dataArray)
             {
-                 int asciiValue = Convert.ToInt32(hexBit, 16);
-                 checkSum += asciiValue;
+                int asciiValue = Convert.ToInt32(hexBit, 16);
+                checkSum += asciiValue;
             }
 
-            // Getting the ascii value of each digit in the response because as per
-            // the technical specification we need to get the ascii value before
-            // we convert it back to the HEX
-            byte[] asciiBytes = Encoding.ASCII.GetBytes(checkSum.ToString());
-            
-            // Since the BCC string needs to be 4 Digits, if the asciibytes
-            // Doesn't reach 4 digits, compliment it by add missing bytes
-            // we just need to add 30 because 30 is the ascii value of 0
+            string checkHex = string.Format("{0:X2}", checkSum);
+            // Use ToCharArray to convert string to array.
+            char[] array = checkHex.ToCharArray();
+            int hexArraySize = (checkHex.Length - 4) * -1;
+            string[] checkSumString = new string[hexArraySize + checkHex.Length];
 
-            string checkSumString = "";
-            // Prefixing missing bcc byte to the response
-            if (asciiBytes.Length < 4)
+            // Fill empty bits with 30 as 30 is the minimum value
+            int index = hexArraySize;
+            hexArraySize = hexArraySize - 1;
+            while (hexArraySize >= 0)
             {
-                for (int count = 0; count < 4 - asciiBytes.Length; count++)
-                {
-                    checkSumString += " 30";
-                }
+                checkSumString[hexArraySize] = "30";
+                hexArraySize--;
             }
 
-            // Let's calculate the Hex value for the BCC now
-            foreach(int bccValue in asciiBytes)
+            // Fill the rest of the array.
+            for (int i = 0; i < array.Length; i++)
             {
-                checkSumString +=" "+bccValue.ToString("X");
+                // Get character from array.
+                checkSumString[index++] = "3" + array[i].ToString();
             }
+            // Conver the checkSum to the it's corresponding hex value
+            string checkSumBcc = string.Join(" ", checkSumString);
 
-            return checkSumString.TrimStart().ToUpper();     
+            return checkSumBcc.ToUpper();   
         }
 
         /**
@@ -467,5 +490,52 @@ namespace SerialComms
             Array.Copy(packet, temp, i + 1);
             return temp;
         }
+
+        private void SDCIDcmd_Click(object sender, EventArgs e)
+        {
+            this.openPort();
+            richTextResponse.Text = this.getSdcId();
+            this.closePort();
+        }
+
+        private void SDC_ID_Status_Click(object sender, EventArgs e)
+        {
+            this.openPort();
+            richTextResponse.Text = this.getSdcStatus();
+            this.closePort();
+        }
+
+        private void ReceiptDataToSDC_Click(object sender, EventArgs e)
+        {
+            string data = richTextCommand.Text;
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                MessageBox.Show("Please provide receipt information, example :nstes01012345,100600570,17/07/2013 09:29:37,1,0.00,18.00,0.00,0.00,11.00,12.00,0.00,0.00,0.00,1.83,0.00,0.00");
+            }
+            else
+            {
+                this.openPort();
+                richTextResponse.Text = this.sendReceiptData(data);
+                this.closePort();
+            }
+        }
+
+        private void requestSignature_Click(object sender, EventArgs e)
+        {
+            string data = richTextCommand.Text;
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                MessageBox.Show("Please provide receipt information, example : 1");
+            }
+            else
+            {
+                this.openPort();
+                richTextResponse.Text = this.getSignature(data);
+                this.closePort();
+            }
+        }
+
+
+
     }
 }
