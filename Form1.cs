@@ -85,7 +85,7 @@ namespace SerialComms
             if (!serialPort.IsOpen)
             {
                 serialPort.PortName = Convert.ToString(comboBoxListPorts.Text);
-                serialPort.BaudRate = 300;
+                serialPort.BaudRate = 9600;
                 serialPort.DataBits = 8;
                 serialPort.StopBits = StopBits.One;
                 serialPort.Handshake = Handshake.None;
@@ -144,7 +144,7 @@ namespace SerialComms
         */
         public Dictionary<string, string> getCounters(string data)
         {
-            string request = this.getSdcRequest(data, "C9", "20");
+            string request = this.getSdcRequest(data, "C9", "27");
 
             Dictionary<string, string> response = this.communicateToSdc(request);
             if (response["status"].ToUpper().Contains("P"))
@@ -165,7 +165,7 @@ namespace SerialComms
 
         public Dictionary<string, string> getSignature(string data)
         {
-            string request = this.getSdcRequest(data, "C8", "23");
+            string request = this.getSdcRequest(data, "C8", "29");
             Dictionary<string,string> response = this.communicateToSdc(request);
             if (response["status"].ToUpper().Contains("P"))
             {
@@ -209,7 +209,7 @@ namespace SerialComms
             //'E' mark for end of receipt 
             // Read the file and display it line by line.
             System.IO.StreamReader file =
-            new System.IO.StreamReader("e:\\test.txt");
+            new System.IO.StreamReader("e:\\invoiceTemplate.txt");
 
             sequence = sequenceInt.ToString("X");
             request = this.getSdcRequest(lineType, "EE", sequence);
@@ -251,7 +251,7 @@ namespace SerialComms
             Dictionary<string, string> cleanResponse = new Dictionary<string, string>();
             try
             {
-
+                
                 this.openPort();
                 // Writing bytes to serial port
                 byte[] bytes = commandString.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
@@ -610,6 +610,9 @@ namespace SerialComms
                 richTextResponse.Text += element.Key + " : " + element.Value + "\r\n";
             }
         }
+
+
+
 
     }
 }
